@@ -4,25 +4,435 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PINBALL-PATEL-FIN 3.2</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Orbitron', sans-serif;
+    background: #0a0a0f;
+    color: #fff;
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100vh;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    padding: 2px;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(ellipse at top, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(0, 255, 255, 0.15) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 100vw;
+    padding: 0;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 2px;
+}
+
+.neon-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: 8px;
+    text-shadow:
+        0 0 10px #00ffff,
+        0 0 20px #00ffff,
+        0 0 30px #00ffff,
+        0 0 40px #ff00ff,
+        0 0 70px #ff00ff,
+        0 0 80px #ff00ff,
+        0 0 100px #ff00ff;
+    animation: neonPulse 2s ease-in-out infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes neonPulse {
+    0%, 100% {
+        text-shadow:
+            0 0 10px #00ffff,
+            0 0 20px #00ffff,
+            0 0 30px #00ffff,
+            0 0 40px #ff00ff,
+            0 0 70px #ff00ff;
+    }
+    50% {
+        text-shadow:
+            0 0 20px #00ffff,
+            0 0 30px #00ffff,
+            0 0 40px #00ffff,
+            0 0 50px #ff00ff,
+            0 0 80px #ff00ff,
+            0 0 90px #ff00ff,
+            0 0 120px #ff00ff;
+    }
+}
+
+.score-board {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.score-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.score-item .label {
+    font-size: 0.8rem;
+    color: #00ffff;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px #00ffff;
+}
+
+.score-item .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #ff00ff;
+    text-shadow: 0 0 15px #ff00ff;
+}
+
+.header-start-button {
+    font-size: 0.85rem;
+    padding: 10px 18px;
+    letter-spacing: 2px;
+    white-space: nowrap;
+}
+
+.game-container {
+    position: relative;
+    width: min(99vw, 1800px);
+    height: min(92vh, 1400px);
+    max-height: none;
+    margin: 0 auto;
+    border: 3px solid #00ffff;
+    border-radius: 10px;
+    box-shadow:
+        0 0 20px rgba(0, 255, 255, 0.5),
+        0 0 40px rgba(255, 0, 255, 0.3),
+        inset 0 0 30px rgba(0, 255, 255, 0.1);
+    overflow: hidden;
+    background: rgba(10, 10, 15, 0.9);
+}
+
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: particleFloat 1s ease-out forwards;
+}
+
+@keyframes particleFloat {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+.game-over,
+.start-screen,
+.language-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    z-index: 20;
+    backdrop-filter: blur(10px);
+}
+
+.game-over { display: none; }
+
+.game-over-title,
+.start-title {
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(45deg, #00ffff, #ff00ff, #00ffff);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 3s ease infinite;
+    text-align: center;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.final-score {
+    font-size: 1.5rem;
+    color: #00ffff;
+    text-shadow: 0 0 20px #00ffff;
+}
+
+.final-score span {
+    color: #ff00ff;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.instructions {
+    max-width: 650px;
+    text-align: center;
+    padding: 30px 40px;
+    background: rgba(0, 255, 255, 0.08);
+    border: 3px solid rgba(0, 255, 255, 0.4);
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+}
+
+.instructions p {
+    margin: 15px 0;
+    font-size: 1.2rem;
+    color: #00ffff;
+    line-height: 1.6;
+}
+
+.instructions strong {
+    color: #ff00ff;
+    text-shadow: 0 0 10px #ff00ff;
+}
+
+.neon-button {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: 15px 40px;
+    background: transparent;
+    color: #00ffff;
+    border: 3px solid #00ffff;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px #00ffff;
+    box-shadow:
+        0 0 20px rgba(0, 255, 255, 0.5),
+        inset 0 0 20px rgba(0, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.neon-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(0, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s;
+}
+
+.neon-button:hover {
+    color: #ff00ff;
+    border-color: #ff00ff;
+    text-shadow: 0 0 20px #ff00ff;
+    box-shadow:
+        0 0 30px rgba(255, 0, 255, 0.7),
+        inset 0 0 30px rgba(255, 0, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.neon-button:hover::before { width: 300px; height: 300px; }
+.neon-button:active { transform: scale(0.95); }
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    margin-top: 4px;
+}
+
+.control-hint {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 1.1rem;
+    color: #00ffff;
+}
+
+.key {
+    display: inline-block;
+    padding: 12px 24px;
+    background: rgba(0, 255, 255, 0.15);
+    border: 3px solid #00ffff;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1.4rem;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+    body { padding: 2px; }
+    .neon-title { font-size: 2rem; letter-spacing: 4px; }
+    .score-board { gap: 20px; }
+    .score-item .value { font-size: 1.4rem; }
+    .game-over-title,
+    .start-title { font-size: 2rem; }
+    .controls {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+    .game-container {
+        width: 99vw;
+        height: min(90vh, 1200px);
+    }
+}
+
+.combo-text {
+    position: absolute;
+    font-size: 2rem;
+    font-weight: 900;
+    color: #ffff00;
+    text-shadow:
+        0 0 10px #ffff00,
+        0 0 20px #ffff00,
+        0 0 30px #ff00ff;
+    animation: comboAnimation 1s ease-out forwards;
+    z-index: 15;
+    pointer-events: none;
+}
+
+@keyframes comboAnimation {
+    0% { transform: scale(0.5) translateY(0); opacity: 0; }
+    30% { transform: scale(1.5) translateY(-20px); opacity: 1; }
+    100% { transform: scale(1) translateY(-60px); opacity: 0; }
+}
+
+.language-modal { z-index: 30; }
+
+.language-modal-title {
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 4s ease infinite;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.language-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    max-width: 700px;
+    padding: 20px;
+}
+
+.language-option {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 20px 30px;
+    background: rgba(0, 255, 255, 0.1);
+    color: #00ffff;
+    border: 2px solid #00ffff;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    box-shadow:
+        0 0 10px rgba(0, 255, 255, 0.3),
+        inset 0 0 20px rgba(0, 255, 255, 0.05);
+}
+
+.language-option:hover {
+    background: rgba(0, 255, 255, 0.2);
+    border-color: #ff00ff;
+    color: #ff00ff;
+    text-shadow: 0 0 15px #ff00ff;
+    box-shadow:
+        0 0 20px rgba(255, 0, 255, 0.5),
+        inset 0 0 30px rgba(255, 0, 255, 0.1);
+    transform: translateY(-3px) scale(1.05);
+}
+
+.language-option:active {
+    transform: translateY(0) scale(1);
+    box-shadow:
+        0 0 30px rgba(0, 255, 255, 0.8),
+        inset 0 0 40px rgba(0, 255, 255, 0.2);
+}
+    </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 <h1 class="neon-title">PINBALL-PATEL-FIN 3.2</h1>
-                <select id="languageSelector" style="background: rgba(0,0,0,0.7); color: #0ff; border: 2px solid #0ff; padding: 8px; border-radius: 5px; font-family: 'Orbitron', monospace; cursor: pointer; display: none;">
-                    <option value="pt-BR">🇧🇷 Português</option>
-                    <option value="en-US">🇺🇸 English</option>
-                    <option value="es-ES">🇪🇸 Español</option>
-                    <option value="fr-FR">🇫🇷 Français</option>
-                    <option value="de-DE">🇩🇪 Deutsch</option>
-                    <option value="it-IT">🇮🇹 Italiano</option>
-                    <option value="ja-JP">🇯🇵 日本語</option>
-                    <option value="zh-CN">🇨🇳 中文</option>
-                    <option value="ru-RU">🇷🇺 Русский</option>
-                    <option value="ko-KR">🇰🇷 한국어</option>
-                </select>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="neon-button header-start-button" id="headerStartBtn" type="button">INICIAR JOGO</button>
+                    <select id="languageSelector" style="background: rgba(0,0,0,0.7); color: #0ff; border: 2px solid #0ff; padding: 8px; border-radius: 5px; font-family: 'Orbitron', monospace; cursor: pointer; display: none;">
+                        <option value="pt-BR">🇧🇷 Português</option>
+                        <option value="en-US">🇺🇸 English</option>
+                        <option value="es-ES">🇪🇸 Español</option>
+                        <option value="fr-FR">🇫🇷 Français</option>
+                        <option value="de-DE">🇩🇪 Deutsch</option>
+                        <option value="it-IT">🇮🇹 Italiano</option>
+                        <option value="ja-JP">🇯🇵 日本語</option>
+                        <option value="zh-CN">🇨🇳 中文</option>
+                        <option value="ru-RU">🇷🇺 Русский</option>
+                        <option value="ko-KR">🇰🇷 한국어</option>
+                    </select>
+                </div>
             </div>
             <div class="score-board">
                 <div class="score-item">
@@ -39,17 +449,17 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="game-container">
             <canvas id="gameCanvas"></canvas>
             <div id="particles"></div>
-            
+
             <div class="game-over" id="gameOver">
                 <h2 class="game-over-title">GAME OVER</h2>
                 <p class="final-score">Pontuação Final: <span id="finalScore">0</span></p>
                 <button class="neon-button" id="restartBtn">JOGAR NOVAMENTE</button>
             </div>
-            
+
             <div class="language-modal" id="languageModal">
                 <h2 class="language-modal-title">🌍 SELECIONE SEU IDIOMA / SELECT YOUR LANGUAGE</h2>
                 <div class="language-grid">
@@ -65,8 +475,8 @@
                     <button class="language-option" data-lang="ko-KR">🇰🇷 한국어</button>
                 </div>
             </div>
-            
-            <div class="start-screen" id="startScreen" style="display: none;">
+
+            <div class="start-screen" id="startScreen" style="display: flex;">
                 <h2 class="start-title">BEM-VINDO AO PINBALL PATEL FIN</h2>
                 <div class="instructions">
                     <p>⌨️ Setas <strong>ESQUERDA</strong> e <strong>DIREITA</strong>: Flippers laterais</p>
@@ -78,7 +488,7 @@
                 <button class="neon-button" id="startBtn">INICIAR JOGO</button>
             </div>
         </div>
-        
+
         <div class="controls">
             <div class="control-hint">
                 <span class="key">←</span>
@@ -92,49 +502,274 @@
                 <span class="key">→</span>
                 <span>Flipper Direito</span>
             </div>
+            <div class="control-hint">
+                <span class="key">ESPAÇO</span>
+                <span>Lançar Bola</span>
+            </div>
         </div>
     </div>
-    
-    <script src="tradutor.js"></script>
-    <script src="audio.js"></script>
-    <script src="game.js"></script>
+
     <script>
-        // Modal de seleção de idioma
-        document.addEventListener('DOMContentLoaded', function() {
-            const languageModal = document.getElementById('languageModal');
-            const startScreen = document.getElementById('startScreen');
-            const languageSelector = document.getElementById('languageSelector');
-            const languageOptions = document.querySelectorAll('.language-option');
-            
-            // Verificar se já tem idioma salvo
-            const savedLanguage = localStorage.getItem('pinballIdioma');
-            if (savedLanguage) {
-                // Se já tem idioma salvo, pula o modal
-                languageModal.style.display = 'none';
-                startScreen.style.display = 'flex';
-                languageSelector.style.display = 'block';
-                languageSelector.value = savedLanguage;
-            }
-            
-            // Configurar botões de idioma
-            languageOptions.forEach(button => {
-                button.addEventListener('click', function() {
-                    const selectedLang = this.getAttribute('data-lang');
-                    tradutor.mudarIdioma(selectedLang);
-                    
-                    // Esconder modal e mostrar tela de início
-                    languageModal.style.display = 'none';
-                    startScreen.style.display = 'flex';
-                    languageSelector.style.display = 'block';
-                    languageSelector.value = selectedLang;
-                });
-            });
-            
-            // Configurar seletor de idioma do header
-            languageSelector.addEventListener('change', function(e) {
-                tradutor.mudarIdioma(e.target.value);
-            });
+const tradutor = {
+    idiomaAtual: 'pt-BR',
+    idiomaPadrao: 'pt-BR',
+    traducoes: {
+        'pt-BR': { titulo: 'PINBALL-PATEL-FIN 3.2', pontos: 'PONTOS:', bolas: 'BOLAS:', highScore: 'HIGH SCORE:', gameOver: 'GAME OVER', pontuacaoFinal: 'Pontuação Final:', jogarNovamente: 'JOGAR NOVAMENTE', bemVindo: 'BEM-VINDO AO PINBALL-PATEL-FIN 3.2', instrucoes: { setasLaterais: 'Setas <strong>ESQUERDA</strong> e <strong>DIREITA</strong>: Flippers laterais', setaCima: 'Seta <strong>PARA CIMA</strong>: Flipper central', espaco: 'Tecla <strong>ESPAÇO</strong>: Lançar a bola (segure e solte)', objetivo: 'Acerte os bumpers e alvos para marcar pontos', combos: 'Combos aumentam sua pontuação!' }, iniciarJogo: 'INICIAR JOGO', combo: 'COMBO x' },
+        'en-US': { titulo: 'PINBALL-PATEL-FIN 3.2', pontos: 'SCORE:', bolas: 'BALLS:', highScore: 'HIGH SCORE:', gameOver: 'GAME OVER', pontuacaoFinal: 'Final Score:', jogarNovamente: 'PLAY AGAIN', bemVindo: 'WELCOME TO PINBALL-PATEL-FIN 3.2', instrucoes: { setasLaterais: '<strong>LEFT</strong> and <strong>RIGHT</strong> Arrows: Side flippers', setaCima: '<strong>UP</strong> Arrow: Center flipper', espaco: '<strong>SPACE</strong> Key: Launch the ball (hold and release)', objetivo: 'Hit the bumpers and targets to score points', combos: 'Combos increase your score!' }, iniciarJogo: 'START GAME', combo: 'COMBO x' },
+        'es-ES': { titulo: 'PINBALL-PATEL-FIN 3.2', pontos: 'PUNTOS:', bolas: 'BOLAS:', highScore: 'PUNTUACIÓN ALTA:', gameOver: 'FIN DEL JUEGO', pontuacaoFinal: 'Puntuación Final:', jogarNovamente: 'JUGAR DE NUEVO', bemVindo: 'BIENVENIDO A PINBALL-PATEL-FIN 3.2', instrucoes: { setasLaterais: 'Flechas <strong>IZQUIERDA</strong> y <strong>DERECHA</strong>: Flippers laterales', setaCima: 'Flecha <strong>ARRIBA</strong>: Flipper central', espaco: 'Tecla <strong>ESPACIO</strong>: Lanzar la bola (mantener y soltar)', objetivo: 'Golpea los bumpers y objetivos para anotar puntos', combos: '¡Los combos aumentan tu puntuación!' }, iniciarJogo: 'INICIAR JUEGO', combo: 'COMBO x' },
+        'fr-FR': { titulo: 'PINBALL-PATEL-FIN 3.2', pontos: 'POINTS:', bolas: 'BALLES:', highScore: 'MEILLEUR SCORE:', gameOver: 'FIN DU JEU', pontuacaoFinal: 'Score Final:', jogarNovamente: 'REJOUER', bemVindo: 'BIENVENUE À PINBALL-PATEL-FIN 3.2', instrucoes: { setasLaterais: 'Flèches <strong>GAUCHE</strong> et <strong>DROITE</strong>: Flippers latéraux', setaCima: 'Flèche <strong>HAUT</strong>: Flipper central', espaco: 'Touche <strong>ESPACE</strong>: Lancer la balle (maintenir et relâcher)', objetivo: 'Frappez les bumpers et cibles pour marquer des points', combos: 'Les combos augmentent votre score!' }, iniciarJogo: 'COMMENCER LE JEU', combo: 'COMBO x' },
+        'de-DE': { titulo: 'PINBALL-PATEL-FIN 3.2', pontos: 'PUNKTE:', bolas: 'BÄLLE:', highScore: 'HÖCHSTPUNKTZAHL:', gameOver: 'SPIEL VORBEI', pontuacaoFinal: 'Endpunktzahl:', jogarNovamente: 'NOCHMAL SPIELEN', bemVindo: 'WILLKOMMEN BEI PINBALL-PATEL-FIN 3.2', instrucoes: { setasLaterais: '<strong>LINKS</strong> und <strong>RECHTS</strong> Pfeile: Seitenflossen', setaCima: '<strong>NACH OBEN</strong> Pfeil: Mittlere Flosse', espaco: '<strong>LEERTASTE</strong>: Ball starten (halten und loslassen)', objetivo: 'Treffen Sie die Bumper und Ziele, um Punkte zu erzielen', combos: 'Combos erhöhen Ihre Punktzahl!' }, iniciarJogo: 'SPIEL STARTEN', combo: 'COMBO x' },
+        'it-IT': { titulo: 'PINBALL-PATEL-FIN 3.2', pontos: 'PUNTEGGIO:', bolas: 'PALLE:', highScore: 'PUNTEGGIO MASSIMO:', gameOver: 'FINE DEL GIOCO', pontuacaoFinal: 'Punteggio Finale:', jogarNovamente: 'GIOCA ANCORA', bemVindo: 'BENVENUTO A PINBALL-PATEL-FIN 3.2', instrucoes: { setasLaterais: 'Frecce <strong>SINISTRA</strong> e <strong>DESTRA</strong>: Flipper laterali', setaCima: 'Freccia <strong>SU</strong>: Flipper centrale', espaco: 'Tasto <strong>SPAZIO</strong>: Lanciare la palla (tenere e rilasciare)', objetivo: 'Colpisci i bumper e i bersagli per segnare punti', combos: 'I combo aumentano il tuo punteggio!' }, iniciarJogo: 'INIZIA GIOCO', combo: 'COMBO x' },
+        'ja-JP': { titulo: 'PINBALL-PATEL-FIN 3.2', pontos: 'スコア:', bolas: 'ボール:', highScore: 'ハイスコア:', gameOver: 'ゲームオーバー', pontuacaoFinal: '最終スコア:', jogarNovamente: 'もう一度プレイ', bemVindo: 'PINBALL-PATEL-FIN 3.2へようこそ', instrucoes: { setasLaterais: '<strong>左</strong>と<strong>右</strong>の矢印: サイドフリッパー', setaCima: '<strong>上</strong>矢印: 中央フリッパー', espaco: '<strong>スペース</strong>キー: ボールを発射（押したまま離す）', objetivo: 'バンパーとターゲットを打ってポイントを獲得', combos: 'コンボでスコアが上がる！' }, iniciarJogo: 'ゲーム開始', combo: 'コンボ x' },
+        'zh-CN': { titulo: 'PINBALL-PATEL-FIN 3.2', pontos: '分数:', bolas: '球:', highScore: '最高分:', gameOver: '游戏结束', pontuacaoFinal: '最终分数:', jogarNovamente: '再玩一次', bemVindo: '欢迎来到 PINBALL-PATEL-FIN 3.2', instrucoes: { setasLaterais: '<strong>左</strong>和<strong>右</strong>箭头: 侧面挡板', setaCima: '<strong>上</strong>箭头: 中央挡板', espaco: '<strong>空格</strong>键: 发射球（按住并释放）', objetivo: '击中保险杠和目标得分', combos: '连击增加你的分数！' }, iniciarJogo: '开始游戏', combo: '连击 x' },
+        'ru-RU': { titulo: 'PINBALL-PATEL-FIN 3.2', pontos: 'ОЧКИ:', bolas: 'ШАРЫ:', highScore: 'РЕКОРД:', gameOver: 'ИГРА ОКОНЧЕНА', pontuacaoFinal: 'Финальный Счет:', jogarNovamente: 'ИГРАТЬ СНОВА', bemVindo: 'ДОБРО ПОЖАЛОВАТЬ В PINBALL-PATEL-FIN 3.2', instrucoes: { setasLaterais: 'Стрелки <strong>ВЛЕВО</strong> и <strong>ВПРАВО</strong>: Боковые флипперы', setaCima: 'Стрелка <strong>ВВЕРХ</strong>: Центральный флиппер', espaco: 'Клавиша <strong>ПРОБЕЛ</strong>: Запустить мяч (удержать и отпустить)', objetivo: 'Попадайте в бамперы и цели для набора очков', combos: 'Комбо увеличивают ваш счет!' }, iniciarJogo: 'НАЧАТЬ ИГРУ', combo: 'КОМБО x' },
+        'ko-KR': { titulo: 'PINBALL-PATEL-FIN 3.2', pontos: '점수:', bolas: '공:', highScore: '최고 점수:', gameOver: '게임 오버', pontuacaoFinal: '최종 점수:', jogarNovamente: '다시 플레이', bemVindo: 'PINBALL-PATEL-FIN 3.2에 오신 것을 환영합니다', instrucoes: { setasLaterais: '<strong>왼쪽</strong> 및 <strong>오른쪽</strong> 화살표: 측면 플리퍼', setaCima: '<strong>위</strong> 화살표: 중앙 플리퍼', espaco: '<strong>스페이스</strong> 키: 공 발사 (누르고 놓기)', objetivo: '범퍼와 타겟을 맞춰 점수 획득', combos: '콤보로 점수를 올리세요!' }, iniciarJogo: '게임 시작', combo: '콤보 x' }
+    },
+    detectarIdiomaUsuario: function() {
+        const idiomasDoNavegador = [];
+        if (Array.isArray(navigator.languages)) idiomasDoNavegador.push(...navigator.languages);
+        if (navigator.language) idiomasDoNavegador.push(navigator.language);
+        const mapaPorPrefixo = { pt: 'pt-BR', en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', it: 'it-IT', ja: 'ja-JP', zh: 'zh-CN', ru: 'ru-RU', ko: 'ko-KR' };
+        for (const idioma of idiomasDoNavegador) {
+            if (!idioma) continue;
+            const normalizado = idioma.replace('_', '-');
+            if (this.traducoes[normalizado]) return normalizado;
+            const prefixo = normalizado.split('-')[0].toLowerCase();
+            if (mapaPorPrefixo[prefixo]) return mapaPorPrefixo[prefixo];
+        }
+        return this.idiomaPadrao;
+    },
+    obter: function(chave) {
+        const idioma = this.traducoes[this.idiomaAtual];
+        const caminhos = chave.split('.');
+        let resultado = idioma;
+        for (let caminho of caminhos) {
+            resultado = resultado[caminho];
+            if (!resultado) return chave;
+        }
+        return resultado;
+    },
+    mudarIdioma: function(novoIdioma) {
+        if (this.traducoes[novoIdioma]) {
+            this.idiomaAtual = novoIdioma;
+            this.aplicarTraducoes();
+            localStorage.setItem('pinballIdioma', novoIdioma);
+            return true;
+        }
+        return false;
+    },
+    aplicarTraducoes: function() {
+        const titulo = document.querySelector('.neon-title');
+        if (titulo) titulo.textContent = this.obter('titulo');
+        const labels = document.querySelectorAll('.score-board .label');
+        if (labels[0]) labels[0].textContent = this.obter('pontos');
+        if (labels[1]) labels[1].textContent = this.obter('bolas');
+        if (labels[2]) labels[2].textContent = this.obter('highScore');
+        const gameOverTitle = document.querySelector('.game-over-title');
+        if (gameOverTitle) gameOverTitle.textContent = this.obter('gameOver');
+        const finalScoreText = document.querySelector('.final-score');
+        if (finalScoreText) {
+            const scoreValue = document.getElementById('finalScore').textContent;
+            finalScoreText.innerHTML = `${this.obter('pontuacaoFinal')} <span id="finalScore">${scoreValue}</span>`;
+        }
+        const restartBtn = document.getElementById('restartBtn');
+        if (restartBtn) restartBtn.textContent = this.obter('jogarNovamente');
+        const startTitle = document.querySelector('.start-title');
+        if (startTitle) startTitle.textContent = this.obter('bemVindo');
+        const instructionsParagraphs = document.querySelectorAll('.instructions p');
+        if (instructionsParagraphs.length >= 5) {
+            instructionsParagraphs[0].innerHTML = '⌨️ ' + this.obter('instrucoes.setasLaterais');
+            instructionsParagraphs[1].innerHTML = '⌨️ ' + this.obter('instrucoes.setaCima');
+            instructionsParagraphs[2].innerHTML = '⌨️ ' + this.obter('instrucoes.espaco');
+            instructionsParagraphs[3].innerHTML = '🎯 ' + this.obter('instrucoes.objetivo');
+            instructionsParagraphs[4].innerHTML = '⚡ ' + this.obter('instrucoes.combos');
+        }
+        const startBtn = document.getElementById('startBtn');
+        if (startBtn) startBtn.textContent = this.obter('iniciarJogo');
+        document.documentElement.lang = this.idiomaAtual;
+    },
+    inicializar: function() {
+        const idiomaSalvo = localStorage.getItem('pinballIdioma');
+        if (idiomaSalvo && this.traducoes[idiomaSalvo]) {
+            this.idiomaAtual = idiomaSalvo;
+            this.aplicarTraducoes();
+            return;
+        }
+        this.idiomaAtual = this.detectarIdiomaUsuario();
+        this.aplicarTraducoes();
+    },
+    listarIdiomas: function() {
+        return Object.keys(this.traducoes).map(codigo => {
+            const nomes = { 'pt-BR': 'Português (Brasil)', 'en-US': 'English (US)', 'es-ES': 'Español', 'fr-FR': 'Français', 'de-DE': 'Deutsch', 'it-IT': 'Italiano', 'ja-JP': '日本語', 'zh-CN': '中文（简体）', 'ru-RU': 'Русский', 'ko-KR': '한국어' };
+            return { codigo, nome: nomes[codigo] || codigo };
         });
+    }
+};
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => tradutor.inicializar()); else tradutor.inicializar();
+
+class AudioManager {
+    constructor() { this.audioContext = null; this.sounds = {}; this.masterGain = null; this.enabled = true; this.backgroundMusic = null; this.musicPlaying = false; }
+    init() { try { this.audioContext = new (window.AudioContext || window.webkitAudioContext)(); this.masterGain = this.audioContext.createGain(); this.masterGain.gain.value = 0.3; this.masterGain.connect(this.audioContext.destination); this.loadBackgroundMusic(); } catch (e) { console.warn('Web Audio API não suportada'); this.enabled = false; } }
+    loadBackgroundMusic() { this.backgroundMusic = new Audio(encodeURI('audio/audio jogo.mp3')); this.backgroundMusic.loop = true; this.backgroundMusic.volume = 0.15; }
+    playBackgroundMusic() { if (!this.enabled || !this.backgroundMusic || this.musicPlaying) return; this.backgroundMusic.play().catch(e => { console.warn('Não foi possível reproduzir música de fundo:', e); }); this.musicPlaying = true; }
+    stopBackgroundMusic() { if (!this.backgroundMusic || !this.musicPlaying) return; this.backgroundMusic.pause(); this.backgroundMusic.currentTime = 0; this.musicPlaying = false; }
+    toggleBackgroundMusic() { if (this.musicPlaying) { this.backgroundMusic.pause(); this.musicPlaying = false; } else { this.playBackgroundMusic(); } }
+    playFlipperSound() { if (!this.enabled) return; const oscillator = this.audioContext.createOscillator(); const gainNode = this.audioContext.createGain(); oscillator.type = 'square'; oscillator.frequency.setValueAtTime(150, this.audioContext.currentTime); oscillator.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 0.1); gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1); oscillator.connect(gainNode); gainNode.connect(this.masterGain); oscillator.start(); oscillator.stop(this.audioContext.currentTime + 0.1); }
+    playBumperSound(intensity = 1) { if (!this.enabled) return; const oscillator = this.audioContext.createOscillator(); const gainNode = this.audioContext.createGain(); const filter = this.audioContext.createBiquadFilter(); oscillator.type = 'sawtooth'; const baseFreq = 300 + (intensity * 200); oscillator.frequency.setValueAtTime(baseFreq, this.audioContext.currentTime); oscillator.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.15); filter.type = 'lowpass'; filter.frequency.setValueAtTime(2000, this.audioContext.currentTime); gainNode.gain.setValueAtTime(0.4 * intensity, this.audioContext.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15); oscillator.connect(filter); filter.connect(gainNode); gainNode.connect(this.masterGain); oscillator.start(); oscillator.stop(this.audioContext.currentTime + 0.15); }
+    playTargetSound() { if (!this.enabled) return; const oscillator = this.audioContext.createOscillator(); const gainNode = this.audioContext.createGain(); oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime); oscillator.frequency.exponentialRampToValueAtTime(1200, this.audioContext.currentTime + 0.1); gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15); oscillator.connect(gainNode); gainNode.connect(this.masterGain); oscillator.start(); oscillator.stop(this.audioContext.currentTime + 0.15); }
+    playComboSound(comboLevel) { if (!this.enabled) return; const oscillator = this.audioContext.createOscillator(); const gainNode = this.audioContext.createGain(); oscillator.type = 'triangle'; const freq = 400 + (comboLevel * 200); oscillator.frequency.setValueAtTime(freq, this.audioContext.currentTime); oscillator.frequency.exponentialRampToValueAtTime(freq * 2, this.audioContext.currentTime + 0.2); gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3); oscillator.connect(gainNode); gainNode.connect(this.masterGain); oscillator.start(); oscillator.stop(this.audioContext.currentTime + 0.3); }
+    playBallLostSound() { if (!this.enabled) return; const oscillator = this.audioContext.createOscillator(); const gainNode = this.audioContext.createGain(); oscillator.type = 'sawtooth'; oscillator.frequency.setValueAtTime(400, this.audioContext.currentTime); oscillator.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 0.5); gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5); oscillator.connect(gainNode); gainNode.connect(this.masterGain); oscillator.start(); oscillator.stop(this.audioContext.currentTime + 0.5); }
+    playGameOverSound() { if (!this.enabled) return; const playNote = (freq, startTime, duration) => { const oscillator = this.audioContext.createOscillator(); const gainNode = this.audioContext.createGain(); oscillator.type = 'triangle'; oscillator.frequency.setValueAtTime(freq, this.audioContext.currentTime + startTime); gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime + startTime); gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + startTime + duration); oscillator.connect(gainNode); gainNode.connect(this.masterGain); oscillator.start(this.audioContext.currentTime + startTime); oscillator.stop(this.audioContext.currentTime + startTime + duration); }; playNote(440, 0, 0.3); playNote(392, 0.3, 0.3); playNote(349, 0.6, 0.5); }
+    playLaunchSound() { if (!this.enabled) return; const oscillator = this.audioContext.createOscillator(); const gainNode = this.audioContext.createGain(); oscillator.type = 'sawtooth'; oscillator.frequency.setValueAtTime(100, this.audioContext.currentTime); oscillator.frequency.exponentialRampToValueAtTime(600, this.audioContext.currentTime + 0.3); gainNode.gain.setValueAtTime(0.4, this.audioContext.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3); oscillator.connect(gainNode); gainNode.connect(this.masterGain); oscillator.start(); oscillator.stop(this.audioContext.currentTime + 0.3); }
+}
+const audioManager = new AudioManager();
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() { const container = canvas.parentElement; canvas.width = container.clientWidth; canvas.height = container.clientHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+let score = 0;
+let balls = 3;
+let highScore = localStorage.getItem('pinballHighScore') || 0;
+let gameStarted = false;
+let gameOver = false;
+let combo = 0;
+let comboTimer = null;
+
+const gravity = 0.3;
+const friction = 0.99;
+const bounceFactor = 0.8;
+
+let ball = { x: canvas.width - 60, y: canvas.height - 100, vx: 0, vy: 0, radius: 8, launched: false, trail: [] };
+let launcher = { x: canvas.width - 50, y: canvas.height - 150, width: 30, height: 100, compressed: 0, maxCompression: 60, active: false };
+let flippers = { left: { x: canvas.width * 0.10, y: canvas.height - 100, width: 150, height: 22, angle: 0.3, targetAngle: 0.3, active: false, pivot: 'left' }, right: { x: canvas.width * 0.78, y: canvas.height - 100, width: 150, height: 22, angle: -0.3, targetAngle: -0.3, active: false, pivot: 'right' }, center: { x: ((canvas.width * 0.10) + (canvas.width * 0.78 + 150)) / 2, y: canvas.height - 100, width: 110, height: 24, angle: 0, targetAngle: 0, active: false, pivot: 'center' } };
+let bumpers = [ { x: canvas.width * 0.25, y: canvas.height * 0.25, radius: 30, color: '#ff00ff', points: 100 }, { x: canvas.width * 0.5, y: canvas.height * 0.2, radius: 30, color: '#00ffff', points: 100 }, { x: canvas.width * 0.75, y: canvas.height * 0.25, radius: 30, color: '#ff00ff', points: 100 }, { x: canvas.width * 0.35, y: canvas.height * 0.35, radius: 25, color: '#ffff00', points: 150 }, { x: canvas.width * 0.65, y: canvas.height * 0.35, radius: 25, color: '#ffff00', points: 150 }, { x: canvas.width * 0.15, y: canvas.height * 0.35, radius: 25, color: '#00ff00', points: 120 }, { x: canvas.width * 0.85, y: canvas.height * 0.35, radius: 25, color: '#00ff00', points: 120 } ];
+let targets = [ { x: canvas.width * 0.15, y: canvas.height * 0.5, width: 60, height: 20, hit: false, color: '#00ff00', points: 50 }, { x: canvas.width * 0.85 - 60, y: canvas.height * 0.5, width: 60, height: 20, hit: false, color: '#00ff00', points: 50 }, { x: canvas.width * 0.2, y: canvas.height * 0.6, width: 50, height: 15, hit: false, color: '#ff6600', points: 75 }, { x: canvas.width * 0.8 - 50, y: canvas.height * 0.6, width: 50, height: 15, hit: false, color: '#ff6600', points: 75 } ];
+let walls = [ { x1: 10, y1: 10, x2: canvas.width - 10, y2: 10 }, { x1: 10, y1: 10, x2: 10, y2: canvas.height - 10 }, { x1: canvas.width - 10, y1: 10, x2: canvas.width - 10, y2: canvas.height - 60 } ];
+
+const keys = {};
+document.addEventListener('keydown', (e) => {
+    keys[e.key] = true;
+    if (e.key === 'ArrowLeft') { flippers.left.active = true; flippers.left.targetAngle = -0.5; if (gameStarted) audioManager.playFlipperSound(); }
+    if (e.key === 'ArrowRight') { flippers.right.active = true; flippers.right.targetAngle = 0.5; if (gameStarted) audioManager.playFlipperSound(); }
+    if (e.key === 'ArrowUp') { flippers.center.active = true; flippers.center.targetAngle = -0.6; if (gameStarted) audioManager.playFlipperSound(); }
+    if (e.key === ' ' && !ball.launched && gameStarted) launcher.active = true;
+});
+document.addEventListener('keyup', (e) => {
+    keys[e.key] = false;
+    if (e.key === 'ArrowLeft') { flippers.left.active = false; flippers.left.targetAngle = 0.3; }
+    if (e.key === 'ArrowRight') { flippers.right.active = false; flippers.right.targetAngle = -0.3; }
+    if (e.key === 'ArrowUp') { flippers.center.active = false; flippers.center.targetAngle = 0; }
+    if (e.key === ' ' && launcher.active && !ball.launched && gameStarted) {
+        const power = launcher.compressed / launcher.maxCompression;
+        ball.vx = -3;
+        ball.vy = -20 * (0.5 + power * 0.5);
+        ball.launched = true;
+        launcher.active = false;
+        launcher.compressed = 0;
+        audioManager.playLaunchSound();
+    }
+});
+
+function isPointOnFlipper(x, y, flipper) {
+    const padding = 20;
+    let hitBox;
+    if (flipper.pivot === 'center') {
+        hitBox = { x: flipper.x - flipper.width / 2 - padding, y: flipper.y - flipper.height / 2 - padding, width: flipper.width + padding * 2, height: flipper.height + padding * 2 };
+    } else if (flipper.pivot === 'left') {
+        hitBox = { x: flipper.x - padding, y: flipper.y - flipper.height / 2 - padding, width: flipper.width + padding * 2, height: flipper.height + padding * 2 };
+    } else {
+        hitBox = { x: flipper.x - padding, y: flipper.y - flipper.height / 2 - padding, width: flipper.width + padding * 2, height: flipper.height + padding * 2 };
+    }
+    return x >= hitBox.x && x <= hitBox.x + hitBox.width && y >= hitBox.y && y <= hitBox.y + hitBox.height;
+}
+function activateFlipper(flipperName) { const flipper = flippers[flipperName]; if (!flipper) return; flipper.active = true; if (flipperName === 'left') flipper.targetAngle = -0.5; else if (flipperName === 'right') flipper.targetAngle = 0.5; else if (flipperName === 'center') flipper.targetAngle = -0.6; if (gameStarted) audioManager.playFlipperSound(); }
+function deactivateFlipper(flipperName) { const flipper = flippers[flipperName]; if (!flipper) return; flipper.active = false; if (flipperName === 'left') flipper.targetAngle = 0.3; else if (flipperName === 'right') flipper.targetAngle = -0.3; else if (flipperName === 'center') flipper.targetAngle = 0; }
+
+let mouseDownFlippers = new Set();
+canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (isPointOnFlipper(x, y, flippers.left)) { mouseDownFlippers.add('left'); activateFlipper('left'); }
+    if (isPointOnFlipper(x, y, flippers.right)) { mouseDownFlippers.add('right'); activateFlipper('right'); }
+    if (isPointOnFlipper(x, y, flippers.center)) { mouseDownFlippers.add('center'); activateFlipper('center'); }
+});
+canvas.addEventListener('mouseup', () => { mouseDownFlippers.forEach(flipperName => deactivateFlipper(flipperName)); mouseDownFlippers.clear(); });
+canvas.addEventListener('mouseleave', () => { mouseDownFlippers.forEach(flipperName => deactivateFlipper(flipperName)); mouseDownFlippers.clear(); });
+
+let activeTouches = new Map();
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i];
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        if (isPointOnFlipper(x, y, flippers.left)) { activeTouches.set(touch.identifier, 'left'); activateFlipper('left'); }
+        else if (isPointOnFlipper(x, y, flippers.right)) { activeTouches.set(touch.identifier, 'right'); activateFlipper('right'); }
+        else if (isPointOnFlipper(x, y, flippers.center)) { activeTouches.set(touch.identifier, 'center'); activateFlipper('center'); }
+    }
+});
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i];
+        const flipperName = activeTouches.get(touch.identifier);
+        if (flipperName) { deactivateFlipper(flipperName); activeTouches.delete(touch.identifier); }
+    }
+});
+canvas.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i];
+        const flipperName = activeTouches.get(touch.identifier);
+        if (flipperName) { deactivateFlipper(flipperName); activeTouches.delete(touch.identifier); }
+    }
+});
+
+function drawNeonCircle(x, y, radius, color, glow = true) { if (glow) { ctx.shadowBlur = 20; ctx.shadowColor = color; } ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke(); ctx.shadowBlur = 0; }
+function drawNeonRect(x, y, width, height, color, glow = true) { if (glow) { ctx.shadowBlur = 15; ctx.shadowColor = color; } ctx.fillStyle = color; ctx.fillRect(x, y, width, height); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.strokeRect(x, y, width, height); ctx.shadowBlur = 0; }
+function drawFlipper(flipper) { ctx.save(); let pivotX, pivotY, offsetX; if (flipper.pivot === 'center') { pivotX = flipper.x; pivotY = flipper.y; offsetX = -flipper.width / 2; } else { pivotX = flipper.pivot === 'left' ? flipper.x : flipper.x + flipper.width; pivotY = flipper.y; offsetX = flipper.pivot === 'left' ? 0 : -flipper.width; } ctx.translate(pivotX, pivotY); ctx.rotate(flipper.angle); ctx.shadowBlur = 20; ctx.shadowColor = flipper.active ? '#00ffff' : '#ff00ff'; ctx.fillStyle = flipper.active ? '#00ffff' : '#ff00ff'; ctx.fillRect(offsetX, -flipper.height / 2, flipper.width, flipper.height); ctx.shadowBlur = 0; ctx.restore(); }
+function drawLauncher() { ctx.shadowBlur = 20; ctx.shadowColor = '#FFD700'; ctx.fillStyle = '#8B6914'; ctx.fillRect(launcher.x - launcher.width, launcher.y + launcher.height + 20, launcher.width * 2, 10); const plungerY = launcher.y + launcher.compressed; const gradient = ctx.createLinearGradient(launcher.x, plungerY, launcher.x, plungerY + launcher.height); gradient.addColorStop(0, '#FFD700'); gradient.addColorStop(1, '#FFA500'); ctx.shadowBlur = 15; ctx.shadowColor = '#FFD700'; ctx.fillStyle = gradient; ctx.fillRect(launcher.x - 10, plungerY, 20, launcher.height - launcher.compressed); ctx.shadowBlur = 0; }
+function drawBall() { if (ball.trail.length > 1) { for (let i = 0; i < ball.trail.length - 1; i++) { const alpha = i / ball.trail.length; ctx.strokeStyle = `rgba(0, 255, 255, ${alpha * 0.5})`; ctx.lineWidth = ball.radius * (1 - alpha); ctx.beginPath(); ctx.moveTo(ball.trail[i].x, ball.trail[i].y); ctx.lineTo(ball.trail[i + 1].x, ball.trail[i + 1].y); ctx.stroke(); } } const gradient = ctx.createRadialGradient(ball.x - 3, ball.y - 3, 2, ball.x, ball.y, ball.radius); gradient.addColorStop(0, '#ffffff'); gradient.addColorStop(0.3, '#00ffff'); gradient.addColorStop(1, '#0088ff'); ctx.shadowBlur = 25; ctx.shadowColor = '#00ffff'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fillStyle = gradient; ctx.fill(); ctx.shadowBlur = 0; }
+function drawBumpers() { bumpers.forEach(bumper => { const pulseRadius = bumper.radius + Math.sin(Date.now() / 200) * 3; ctx.shadowBlur = 30; ctx.shadowColor = bumper.color; ctx.beginPath(); ctx.arc(bumper.x, bumper.y, pulseRadius, 0, Math.PI * 2); ctx.strokeStyle = bumper.color; ctx.lineWidth = 3; ctx.stroke(); const gradient = ctx.createRadialGradient(bumper.x, bumper.y, 0, bumper.x, bumper.y, bumper.radius); gradient.addColorStop(0, bumper.color); gradient.addColorStop(0.7, bumper.color + '88'); gradient.addColorStop(1, bumper.color + '22'); ctx.beginPath(); ctx.arc(bumper.x, bumper.y, bumper.radius, 0, Math.PI * 2); ctx.fillStyle = gradient; ctx.fill(); ctx.shadowBlur = 0; }); }
+function drawTargets() { targets.forEach(target => { if (!target.hit) { ctx.shadowBlur = 15; ctx.shadowColor = target.color; ctx.fillStyle = target.color; ctx.fillRect(target.x, target.y, target.width, target.height); ctx.strokeStyle = target.color + '66'; ctx.lineWidth = 1; for (let i = 0; i < target.height; i += 4) { ctx.beginPath(); ctx.moveTo(target.x, target.y + i); ctx.lineTo(target.x + target.width, target.y + i); ctx.stroke(); } ctx.shadowBlur = 0; } }); }
+function drawWalls() { ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 4; ctx.shadowBlur = 10; ctx.shadowColor = '#00ffff'; walls.forEach(wall => { ctx.beginPath(); ctx.moveTo(wall.x1, wall.y1); ctx.lineTo(wall.x2, wall.y2); ctx.stroke(); }); ctx.shadowBlur = 0; }
+function updateBall() { if (!ball.launched) return; ball.vy += gravity; ball.vx *= friction; ball.vy *= friction; ball.x += ball.vx; ball.y += ball.vy; ball.trail.push({ x: ball.x, y: ball.y }); if (ball.trail.length > 15) ball.trail.shift(); if (ball.x - ball.radius < 10) { ball.x = 10 + ball.radius; ball.vx *= -bounceFactor; createParticles(ball.x, ball.y, '#00ffff'); } if (ball.x + ball.radius > canvas.width - 10) { ball.x = canvas.width - 10 - ball.radius; ball.vx *= -bounceFactor; createParticles(ball.x, ball.y, '#00ffff'); } if (ball.y - ball.radius < 10) { ball.y = 10 + ball.radius; ball.vy *= -bounceFactor; createParticles(ball.x, ball.y, '#00ffff'); } if (ball.y > canvas.height) { balls--; audioManager.playBallLostSound(); updateUI(); if (balls > 0) { resetBall(); } else { endGame(); } } bumpers.forEach(bumper => { const dx = ball.x - bumper.x; const dy = ball.y - bumper.y; const distance = Math.sqrt(dx * dx + dy * dy); if (distance < ball.radius + bumper.radius) { const angle = Math.atan2(dy, dx); const force = 12; ball.vx = Math.cos(angle) * force; ball.vy = Math.sin(angle) * force; const overlap = ball.radius + bumper.radius - distance; ball.x += Math.cos(angle) * overlap; ball.y += Math.sin(angle) * overlap; addScore(bumper.points); audioManager.playBumperSound(1.5); createParticles(ball.x, ball.y, bumper.color, 20); const originalRadius = bumper.radius; bumper.radius += 5; setTimeout(() => bumper.radius = originalRadius, 100); } }); targets.forEach(target => { if (!target.hit && ball.x + ball.radius > target.x && ball.x - ball.radius < target.x + target.width && ball.y + ball.radius > target.y && ball.y - ball.radius < target.y + target.height) { target.hit = true; addScore(target.points); audioManager.playTargetSound(); createParticles(target.x + target.width / 2, target.y + target.height / 2, target.color, 15); if (ball.x < target.x || ball.x > target.x + target.width) ball.vx *= -1; else ball.vy *= -1; setTimeout(() => target.hit = false, 3000); } }); checkFlipperCollision(flippers.left); checkFlipperCollision(flippers.right); checkFlipperCollision(flippers.center); }
+function checkFlipperCollision(flipper) { let pivotX, pivotY, offsetX; if (flipper.pivot === 'center') { pivotX = flipper.x; pivotY = flipper.y; offsetX = -flipper.width / 2; } else { pivotX = flipper.pivot === 'left' ? flipper.x : flipper.x + flipper.width; pivotY = flipper.y; offsetX = flipper.pivot === 'left' ? 0 : -flipper.width; } const cos = Math.cos(flipper.angle); const sin = Math.sin(flipper.angle); const corners = [ { x: offsetX, y: -flipper.height / 2 }, { x: offsetX + flipper.width, y: -flipper.height / 2 }, { x: offsetX + flipper.width, y: flipper.height / 2 }, { x: offsetX, y: flipper.height / 2 } ]; const rotatedCorners = corners.map(c => ({ x: pivotX + c.x * cos - c.y * sin, y: pivotY + c.x * sin + c.y * cos })); for (let i = 0; i < 4; i++) { const p1 = rotatedCorners[i]; const p2 = rotatedCorners[(i + 1) % 4]; const dx = ball.x - p1.x; const dy = ball.y - p1.y; const lineX = p2.x - p1.x; const lineY = p2.y - p1.y; const dot = dx * lineX + dy * lineY; const lenSq = lineX * lineX + lineY * lineY; const param = Math.max(0, Math.min(1, dot / lenSq)); const closestX = p1.x + param * lineX; const closestY = p1.y + param * lineY; const distX = ball.x - closestX; const distY = ball.y - closestY; const distance = Math.sqrt(distX * distX + distY * distY); if (distance < ball.radius) { const angle = Math.atan2(distY, distX); const force = flipper.active ? 18 : 12; ball.vx = Math.cos(angle) * force; ball.vy = Math.sin(angle) * force - 5; const overlap = ball.radius - distance; ball.x += Math.cos(angle) * overlap; ball.y += Math.sin(angle) * overlap; createParticles(ball.x, ball.y, flipper.active ? '#00ffff' : '#ff00ff', 10); break; } } }
+function updateFlippers() { flippers.left.angle += (flippers.left.targetAngle - flippers.left.angle) * 0.3; flippers.right.angle += (flippers.right.targetAngle - flippers.right.angle) * 0.3; flippers.center.angle += (flippers.center.targetAngle - flippers.center.angle) * 0.3; }
+function updateLauncher() { if (launcher.active && !ball.launched) launcher.compressed = Math.min(launcher.compressed + 2, launcher.maxCompression); }
+function resetBall() { ball.x = canvas.width - 60; ball.y = canvas.height - 100; ball.vx = 0; ball.vy = 0; ball.launched = false; ball.trail = []; }
+function addScore(points) { combo++; const multiplier = Math.min(combo, 5); const totalPoints = points * multiplier; score += totalPoints; if (combo > 1) { audioManager.playComboSound(combo); showComboText(combo, multiplier); } updateUI(); if (comboTimer) clearTimeout(comboTimer); comboTimer = setTimeout(() => { combo = 0; }, 2000); }
+function showComboText(combo, multiplier) { const comboEl = document.createElement('div'); comboEl.className = 'combo-text'; const textoCombo = typeof tradutor !== 'undefined' ? tradutor.obter('combo') : 'COMBO x'; comboEl.textContent = `${textoCombo}${multiplier}!`; comboEl.style.left = `${ball.x}px`; comboEl.style.top = `${ball.y}px`; document.getElementById('particles').appendChild(comboEl); setTimeout(() => comboEl.remove(), 1000); }
+function createParticles(x, y, color, count = 10) { const particleContainer = document.getElementById('particles'); for (let i = 0; i < count; i++) { const particle = document.createElement('div'); particle.className = 'particle'; particle.style.left = x + 'px'; particle.style.top = y + 'px'; particle.style.backgroundColor = color; particle.style.boxShadow = `0 0 10px ${color}`; const angle = (Math.PI * 2 * i) / count; const distance = 50 + Math.random() * 50; const tx = Math.cos(angle) * distance; const ty = Math.sin(angle) * distance; particle.style.setProperty('--tx', tx + 'px'); particle.style.setProperty('--ty', ty + 'px'); particleContainer.appendChild(particle); setTimeout(() => particle.remove(), 1000); } }
+function updateUI() { document.getElementById('score').textContent = score; document.getElementById('balls').textContent = balls; document.getElementById('highScore').textContent = highScore; }
+function startGame() { gameStarted = true; gameOver = false; score = 0; balls = 3; combo = 0; resetBall(); updateUI(); document.getElementById('startScreen').style.display = 'none'; document.getElementById('gameOver').style.display = 'none'; window.scrollTo(0, 0); audioManager.init(); audioManager.playBackgroundMusic(); gameLoop(); }
+function endGame() { gameOver = true; gameStarted = false; if (score > highScore) { highScore = score; localStorage.setItem('pinballHighScore', highScore); } document.getElementById('finalScore').textContent = score; document.getElementById('gameOver').style.display = 'flex'; audioManager.stopBackgroundMusic(); audioManager.playGameOverSound(); }
+function gameLoop() { if (!gameStarted || gameOver) return; ctx.fillStyle = 'rgba(10, 10, 15, 0.3)'; ctx.fillRect(0, 0, canvas.width, canvas.height); drawWalls(); drawBumpers(); drawTargets(); drawFlipper(flippers.left); drawFlipper(flippers.right); drawFlipper(flippers.center); drawLauncher(); drawBall(); updateBall(); updateFlippers(); updateLauncher(); requestAnimationFrame(gameLoop); }
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+updateUI();
+
+(() => {
+    const languageModal = document.getElementById('languageModal');
+    const startScreen = document.getElementById('startScreen');
+    const languageSelector = document.getElementById('languageSelector');
+    const headerStartBtn = document.getElementById('headerStartBtn');
+    const languageOptions = document.querySelectorAll('.language-option');
+    const idiomaInicial = tradutor.idiomaAtual;
+    languageModal.style.display = 'none';
+    startScreen.style.display = 'flex';
+    languageSelector.style.display = 'block';
+    languageSelector.value = idiomaInicial;
+    if (headerStartBtn) headerStartBtn.addEventListener('click', startGame);
+    languageOptions.forEach(button => { button.addEventListener('click', function() { const selectedLang = this.getAttribute('data-lang'); tradutor.mudarIdioma(selectedLang); languageModal.style.display = 'none'; startScreen.style.display = 'flex'; languageSelector.style.display = 'block'; languageSelector.value = selectedLang; }); });
+    languageSelector.addEventListener('change', function(e) { tradutor.mudarIdioma(e.target.value); });
+})();
     </script>
 </body>
 </html>
